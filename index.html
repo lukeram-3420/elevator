@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f12">
+<title>YVR Elevator Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --bg-elev: #15181d;
+    --card: #1a1e24;
+    --card-hi: #222730;
+    --border: #2a2f38;
+    --text: #e8ebef;
+    --text-dim: #9aa3ad;
+    --text-faint: #6b7380;
+    --accent: #f5a623;
+    --accent-hi: #ffb83d;
+    --badge-key-bg: #3d2f08;
+    --badge-key-fg: #f5c64a;
+    --badge-key-bd: #6b5210;
+    --badge-oneshot-bg: #3d1212;
+    --badge-oneshot-fg: #ff6b6b;
+    --badge-oneshot-bd: #6b1a1a;
+    --badge-prox-bg: #0f2a3d;
+    --badge-prox-fg: #5ab4e8;
+    --badge-prox-bd: #1a4d6b;
+    --side-airside: #5ab4e8;
+    --side-groundside: #b98cff;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px 16px 80px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .header-title h1 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .header-title .sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .admin-btn {
+    background: transparent;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .admin-btn:hover, .admin-btn:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  /* Selector */
+  .selector {
+    margin-bottom: 24px;
+  }
+
+  .selector label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
+
+  .selector select {
+    width: 100%;
+    background: var(--bg-elev);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 44px 16px 18px;
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><path fill='none' stroke='%23f5a623' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3 5l4 4 4-4'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .selector select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-faint);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* Elevator header */
+  .elev-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 4px 4px 14px;
+    margin-bottom: 4px;
+  }
+
+  .elev-header h2 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.01em;
+  }
+
+  .elev-header .elev-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--card-hi);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .card-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .card-mr .card-label {
+    color: var(--accent);
+  }
+
+  .level-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-faint);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    letter-spacing: 0.08em;
+  }
+
+  .side-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+  .side-tag.airside {
+    color: var(--side-airside);
+    border-color: rgba(90, 180, 232, 0.35);
+    background: rgba(90, 180, 232, 0.08);
+  }
+  .side-tag.groundside {
+    color: var(--side-groundside);
+    border-color: rgba(185, 140, 255, 0.35);
+    background: rgba(185, 140, 255, 0.08);
+  }
+  .side-tag.both {
+    color: var(--text-dim);
+    border-color: var(--border);
+    background: var(--bg);
+  }
+
+  /* Badges */
+  .badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .badge-key {
+    color: var(--badge-key-fg);
+    background: var(--badge-key-bg);
+    border-color: var(--badge-key-bd);
+  }
+  .badge-oneshot {
+    color: var(--badge-oneshot-fg);
+    background: var(--badge-oneshot-bg);
+    border-color: var(--badge-oneshot-bd);
+  }
+  .badge-prox {
+    color: var(--badge-prox-fg);
+    background: var(--badge-prox-bg);
+    border-color: var(--badge-prox-bd);
+  }
+
+  /* Card body */
+  .card-body {
+    padding: 14px 16px 16px;
+  }
+
+  .field {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 6px 14px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .field:first-child { border-top: none; padding-top: 0; }
+
+  .field-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+
+  .field-value {
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .field-value.mono {
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .field-value.description {
+    white-space: pre-wrap;
+  }
+  .field-value .na {
+    color: var(--text-faint);
+    font-style: italic;
+  }
+
+  .yes { color: #7bd88f; font-family: var(--mono); font-weight: 600; font-size: 13px; }
+  .no { color: var(--text-faint); font-family: var(--mono); font-size: 13px; }
+
+  /* Comments */
+  .comments-card {
+    background: rgba(245, 166, 35, 0.04);
+    border: 1px solid rgba(245, 166, 35, 0.2);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 20px;
+  }
+  .comments-card .card-label {
+    color: var(--accent);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .comments-card p {
+    margin: 0;
+    white-space: pre-wrap;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 36px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+  }
+
+  /* Mobile tuning */
+  @media (max-width: 520px) {
+    .app { padding: 12px 12px 60px; }
+    .header-title .sub { display: none; }
+    .elev-header h2 { font-size: 24px; }
+    .field { grid-template-columns: 1fr; gap: 2px; padding: 10px 0; }
+    .field-label { padding-top: 0; }
+    .selector select { font-size: 17px; padding: 14px 40px 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <header class="header">
+    <div class="header-title">
+      <h1>YVR Elevator Audit</h1>
+      <span class="sub">ARFF Field Reference</span>
+    </div>
+    <button class="admin-btn" id="adminBtn" type="button">Admin</button>
+  </header>
+
+  <div class="selector">
+    <label for="elevatorSelect">Select Elevator</label>
+    <select id="elevatorSelect">
+      <option value="">— Choose an elevator —</option>
+    </select>
+  </div>
+
+  <main id="detail" aria-live="polite">
+    <div class="empty">Select an elevator to view access details.</div>
+  </main>
+
+  <footer class="footer" id="footer">
+    Last updated: —
+  </footer>
+
+</div>
+
+<script id="elevator-data" type="application/json">
+{
+  "meta": {
+    "lastUpdatedBy": "",
+    "lastUpdatedAt": ""
+  },
+  "elevators": [
+    {
+      "id": 9,
+      "machineRoom": {
+        "side": "Groundside",
+        "parking": "Curb by AC Domestic check-in",
+        "description": "Proceed to Domestic Info Counter. Elevator #9 is behind info counter. Take stairwell to level 4. Left hand search. Exit door B4000A. LH Search take door B4000B. Go up another set of stairs to level 7. Note: MR on LV 6 is for elevator #8! Go up to level 7, thru door B7000 (M11). RH search and access MR door B7001 (TMK).",
+        "stairwell": true
+      },
+      "levels": [
+        {
+          "level": "5",
+          "side": "Groundside",
+          "parking": "Curb by AC Domestic check-in",
+          "description": "Proceed to Domestic Info Counter. Take stairwell behind info counter to level 4. Left hand search. Go thru door B4000B. Go up another set of stairs to level 5. RH search to elevator #9.",
+          "stairwell": true
+        },
+        {
+          "level": "4",
+          "side": "Groundside",
+          "parking": "Curb by AC Domestic check-in",
+          "description": "Proceed to Domestic Info Counter. Take stairwell behind info counter to level 4.",
+          "stairwell": true
+        },
+        {
+          "level": "3",
+          "side": "Groundside",
+          "parking": "Curb by AC Domestic check-in",
+          "description": "Proceed to Domestic Info Counter. Elevator #9 is behind info counter.",
+          "stairwell": true
+        },
+        {
+          "level": "2",
+          "side": "Groundside",
+          "parking": "Curb by AC Domestic check-in",
+          "description": "Proceed to Domestic Info Counter. Take stairwell behind info counter to level 2.",
+          "stairwell": true
+        },
+        {
+          "level": "1",
+          "side": "Groundside",
+          "parking": "Curb by AC Domestic check-in",
+          "description": "Proceed to Domestic Info Counter. Take stairwell behind info counter to level 1.",
+          "stairwell": true
+        }
+      ],
+      "comments": "Alt Access to Elevator 9 can be done from airside via the Domestic Mantrap. Thru CATSA Screening. LH search down corridor to Elevator #9 on level 2. Continue LH search to gain access to stairwell to level 1, 3, 4, 5. MR is located in old control tower on level 7. No elevator service on level 6 and 7. MR on level 6 Room B6000 EMR 08 — this is for Elevator #8!"
+    },
+    {
+      "id": 33,
+      "machineRoom": {
+        "side": "Airside",
+        "parking": "Gate 50 — Level 1",
+        "description": "Proceed left down ramp, enter through first or 2nd set of roll up doors on the right into ITB bag hall. Continue straight until reaching pillar L1/C6 in the middle. EMR B1511 will be beside the pillar. TMK#14 key. Continue past EMR on right side and stairwell will be on the left. Call OPS for one shot.",
+        "stairwell": true
+      },
+      "levels": [
+        {
+          "level": "5",
+          "side": "Groundside",
+          "parking": "Graham Clarke Atrium",
+          "description": "The elevator will be on your right when you enter through doors past the totem pole. Stairwell is to the right of the elevator. Level leads to Link offices.",
+          "stairwell": true
+        },
+        {
+          "level": "4",
+          "side": "Groundside",
+          "parking": "Graham Clarke Atrium",
+          "description": "The elevator will be on your right when you enter through doors past the totem pole. Stairwell is to the right of the elevator. Proceed up stairwell to level 4 (takes you to Skytrain).",
+          "stairwell": true
+        },
+        {
+          "level": "3",
+          "side": "Groundside",
+          "parking": "Graham Clarke Atrium",
+          "description": "The elevator will be on your right when you enter through doors past the totem pole. Stairwell is to the right of the elevator.",
+          "stairwell": true
+        },
+        {
+          "level": "1",
+          "side": "Groundside",
+          "parking": "Graham Clarke Atrium",
+          "description": "The elevator will be on your right when you enter through doors past the totem pole. Stairwell is to the right of the elevator. Need to call OPS for one shot to access level 1 EMR room in bag hall. Proceed directly across door into bag hall, turn right and RH search until you find EMR B1511, directly beside pillar L1/C6.",
+          "stairwell": true
+        }
+      ],
+      "comments": "Easiest access for Machine room team responding (RED 9) is Airside at gate 50. Preferred medical team access for occupants would be level 3 at Graham Clarke Atrium as levels 3, 4 and 5 do not require one shot."
+    }
+  ]
+}
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  // --- Data load ---
+  const DATA = JSON.parse(document.getElementById('elevator-data').textContent);
+
+  // --- Warning badges ---
+  const BADGE_RULES = [
+    { key: 'key',     regex: /\bTMK\b|key required/i, label: 'KEY',      icon: '\uD83D\uDD11', cls: 'badge-key' },
+    { key: 'oneshot', regex: /one[\s-]?shot/i,         label: 'ONE SHOT', icon: '\u26A1',       cls: 'badge-oneshot' },
+    { key: 'prox',    regex: /\bprox\b/i,              label: 'PROX',     icon: '\uD83D\uDCE1', cls: 'badge-prox' }
+  ];
+
+  function detectBadges(textParts) {
+    const blob = textParts.filter(Boolean).join(' \n ');
+    return BADGE_RULES.filter(r => r.regex.test(blob));
+  }
+
+  function renderBadges(badges) {
+    if (!badges.length) return '';
+    return '<div class="badges">' + badges.map(b =>
+      `<span class="badge ${b.cls}" title="${b.label}"><span aria-hidden="true">${b.icon}</span> ${b.label}</span>`
+    ).join('') + '</div>';
+  }
+
+  // --- Escaping ---
+  function esc(s) {
+    if (s === null || s === undefined || s === '') return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function na(s) {
+    if (s === null || s === undefined || s === '') {
+      return '<span class="na">—</span>';
+    }
+    return esc(s);
+  }
+
+  function sideClass(side) {
+    if (!side) return 'both';
+    const s = side.toLowerCase();
+    if (s.includes('airside') && s.includes('groundside')) return 'both';
+    if (s.includes('airside')) return 'airside';
+    if (s.includes('groundside')) return 'groundside';
+    return 'both';
+  }
+
+  function yesNo(v) {
+    if (v === true) return '<span class="yes">YES</span>';
+    if (v === false) return '<span class="no">NO</span>';
+    return '<span class="na">—</span>';
+  }
+
+  // --- Card rendering ---
+  function renderMachineRoom(mr) {
+    const badges = detectBadges([mr.description, mr.parking]);
+    const hasAny = mr.side || mr.parking || mr.description || mr.stairwell !== null;
+    return `
+      <section class="card card-mr">
+        <header class="card-header">
+          <div class="card-header-left">
+            <span class="card-label">Machine Room</span>
+            ${mr.side ? `<span class="side-tag ${sideClass(mr.side)}">${esc(mr.side)}</span>` : ''}
+          </div>
+          ${renderBadges(badges)}
+        </header>
+        <div class="card-body">
+          ${!hasAny ? '<div class="field"><div class="field-value"><span class="na">No data recorded.</span></div></div>' : `
+          <div class="field">
+            <div class="field-label">Parking</div>
+            <div class="field-value mono">${na(mr.parking)}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Access</div>
+            <div class="field-value description">${na(mr.description)}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Stairwell</div>
+            <div class="field-value">${yesNo(mr.stairwell)}</div>
+          </div>
+          `}
+        </div>
+      </section>
+    `;
+  }
+
+  function renderLevel(lvl) {
+    const badges = detectBadges([lvl.description, lvl.parking]);
+    return `
+      <section class="card">
+        <header class="card-header">
+          <div class="card-header-left">
+            <span class="card-label">Level</span>
+            <span class="level-tag">${esc(lvl.level)}</span>
+            ${lvl.side ? `<span class="side-tag ${sideClass(lvl.side)}">${esc(lvl.side)}</span>` : ''}
+          </div>
+          ${renderBadges(badges)}
+        </header>
+        <div class="card-body">
+          <div class="field">
+            <div class="field-label">Parking</div>
+            <div class="field-value mono">${na(lvl.parking)}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Access</div>
+            <div class="field-value description">${na(lvl.description)}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Stairwell</div>
+            <div class="field-value">${yesNo(lvl.stairwell)}</div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderComments(c) {
+    if (!c) return '';
+    return `
+      <section class="comments-card">
+        <span class="card-label">Additional Comments</span>
+        <p>${esc(c)}</p>
+      </section>
+    `;
+  }
+
+  function renderElevator(el) {
+    const levelsHtml = (el.levels || []).map(renderLevel).join('');
+    return `
+      <div class="elev-header">
+        <h2>Elevator #${esc(el.id)}</h2>
+        <span class="elev-count">${(el.levels || []).length} level${(el.levels || []).length === 1 ? '' : 's'}</span>
+      </div>
+      ${renderMachineRoom(el.machineRoom || {})}
+      ${levelsHtml}
+      ${renderComments(el.comments)}
+    `;
+  }
+
+  // --- Dropdown + wiring ---
+  function populateDropdown() {
+    const sel = document.getElementById('elevatorSelect');
+    DATA.elevators
+      .slice()
+      .sort((a, b) => a.id - b.id)
+      .forEach(el => {
+        const opt = document.createElement('option');
+        opt.value = String(el.id);
+        opt.textContent = `Elevator ${el.id}`;
+        sel.appendChild(opt);
+      });
+    sel.addEventListener('change', () => {
+      const id = Number(sel.value);
+      const detail = document.getElementById('detail');
+      if (!id) {
+        detail.innerHTML = '<div class="empty">Select an elevator to view access details.</div>';
+        return;
+      }
+      const el = DATA.elevators.find(e => e.id === id);
+      detail.innerHTML = el ? renderElevator(el) : '<div class="empty">Not found.</div>';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  // --- Footer ---
+  function renderFooter() {
+    const { lastUpdatedBy, lastUpdatedAt } = DATA.meta || {};
+    const footer = document.getElementById('footer');
+    if (!lastUpdatedAt && !lastUpdatedBy) {
+      footer.textContent = 'Last updated: —';
+      return;
+    }
+    let when = '—';
+    if (lastUpdatedAt) {
+      const d = new Date(lastUpdatedAt);
+      if (!isNaN(d)) {
+        when = d.toLocaleString('en-GB', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      }
+    }
+    footer.textContent = `Last updated: ${when}${lastUpdatedBy ? ' by ' + lastUpdatedBy : ''}`;
+  }
+
+  // --- Admin button (scaffold only) ---
+  document.getElementById('adminBtn').addEventListener('click', () => {
+    alert('Admin panel — not wired up yet.');
+  });
+
+  populateDropdown();
+  renderFooter();
+})();
+</script>
+
+</body>
+</html>
