@@ -118,6 +118,7 @@
   /* Selector */
   .selector {
     margin-bottom: 24px;
+    position: relative;
   }
 
   .selector label {
@@ -131,28 +132,108 @@
     padding-left: 2px;
   }
 
-  .selector select {
+  .combo {
+    position: relative;
+  }
+
+  .combo-input {
     width: 100%;
     background: var(--bg-elev);
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 16px 44px 16px 18px;
+    padding: 16px 80px 16px 18px;
     font-family: var(--mono);
     font-size: 18px;
     font-weight: 500;
     letter-spacing: 0.02em;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><path fill='none' stroke='%23f5a623' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3 5l4 4 4-4'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 18px center;
     cursor: pointer;
     transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
   }
-  .selector select:focus {
+  .combo-input::placeholder { color: var(--text-faint); }
+  .combo-input:focus {
     outline: none;
     border-color: var(--accent);
+  }
+  .combo-input.open {
+    border-color: var(--accent);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .combo-clear,
+  .combo-toggle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .combo-clear { right: 40px; }
+  .combo-toggle { right: 8px; }
+  .combo-clear:hover, .combo-toggle:hover { color: var(--accent); }
+  .combo-clear[hidden] { display: none; }
+  .combo-toggle svg { transition: transform 0.2s; }
+  .combo-input.open ~ .combo-toggle svg { transform: rotate(180deg); color: var(--accent); }
+
+  .combo-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--accent);
+    border-top: none;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    max-height: 320px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+    z-index: 20;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .combo-list[hidden] { display: none; }
+
+  .combo-option {
+    padding: 12px 18px;
+    font-family: var(--mono);
+    font-size: 17px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .combo-option:hover,
+  .combo-option.active {
+    background: var(--card-hi);
+    color: var(--accent);
+  }
+  .combo-option .opt-id {
+    font-weight: 600;
+  }
+  .combo-option .opt-hint {
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+  .combo-empty {
+    padding: 16px 18px;
+    color: var(--text-faint);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
   }
 
   /* Empty state */
@@ -406,10 +487,30 @@
   </header>
 
   <div class="selector">
-    <label for="elevatorSelect">Select Elevator</label>
-    <select id="elevatorSelect">
-      <option value="">— Choose an elevator —</option>
-    </select>
+    <label for="elevatorInput">Select Elevator</label>
+    <div class="combo">
+      <input
+        id="elevatorInput"
+        class="combo-input"
+        type="text"
+        role="combobox"
+        autocomplete="off"
+        autocapitalize="off"
+        autocorrect="off"
+        spellcheck="false"
+        inputmode="numeric"
+        placeholder="Type a number or tap to browse — e.g. 9, 33, 160"
+        aria-expanded="false"
+        aria-controls="elevatorList"
+        aria-autocomplete="list">
+      <button type="button" class="combo-clear" id="elevatorClear" aria-label="Clear" hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+      <button type="button" class="combo-toggle" id="elevatorToggle" aria-label="Toggle list" tabindex="-1">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5l4 4 4-4"/></svg>
+      </button>
+      <ul class="combo-list" id="elevatorList" role="listbox" hidden></ul>
+    </div>
   </div>
 
   <main id="detail" aria-live="polite">
@@ -569,28 +670,152 @@
     `;
   }
 
-  // --- Dropdown + wiring ---
-  function populateDropdown() {
-    const sel = document.getElementById('elevatorSelect');
-    DATA.elevators
-      .slice()
-      .sort((a, b) => a.id - b.id)
-      .forEach(el => {
-        const opt = document.createElement('option');
-        opt.value = String(el.id);
-        opt.textContent = `Elevator ${el.id}`;
-        sel.appendChild(opt);
-      });
-    sel.addEventListener('change', () => {
-      const id = Number(sel.value);
-      const detail = document.getElementById('detail');
-      if (!id) {
-        detail.innerHTML = '<div class="empty">Select an elevator to view access details.</div>';
+  // --- Searchable combobox ---
+  function initCombobox() {
+    const input = document.getElementById('elevatorInput');
+    const list = document.getElementById('elevatorList');
+    const toggle = document.getElementById('elevatorToggle');
+    const clearBtn = document.getElementById('elevatorClear');
+    const detail = document.getElementById('detail');
+
+    const all = DATA.elevators.slice().sort((a, b) => a.id - b.id);
+    let activeIdx = -1;
+    let currentId = null;
+
+    function open() {
+      list.hidden = false;
+      input.classList.add('open');
+      input.setAttribute('aria-expanded', 'true');
+    }
+    function close() {
+      list.hidden = true;
+      input.classList.remove('open');
+      input.setAttribute('aria-expanded', 'false');
+      activeIdx = -1;
+    }
+    function isOpen() { return !list.hidden; }
+
+    function filtered() {
+      const q = input.value.trim().toLowerCase();
+      if (!q) return all;
+      return all.filter(el => String(el.id).includes(q));
+    }
+
+    function renderList() {
+      const items = filtered();
+      if (!items.length) {
+        list.innerHTML = '<li class="combo-empty">No matching elevators</li>';
+        activeIdx = -1;
         return;
       }
-      const el = DATA.elevators.find(e => e.id === id);
-      detail.innerHTML = el ? renderElevator(el) : '<div class="empty">Not found.</div>';
+      list.innerHTML = items.map((el, i) => {
+        const hint = (el.levels && el.levels.length)
+          ? `${el.levels.length} level${el.levels.length === 1 ? '' : 's'}`
+          : 'no data';
+        return `<li class="combo-option${i === activeIdx ? ' active' : ''}" role="option" data-id="${el.id}">
+          <span class="opt-id">Elevator ${el.id}</span>
+          <span class="opt-hint">· ${hint}</span>
+        </li>`;
+      }).join('');
+    }
+
+    function scrollActiveIntoView() {
+      const active = list.querySelector('.combo-option.active');
+      if (active) active.scrollIntoView({ block: 'nearest' });
+    }
+
+    function select(id) {
+      const el = all.find(e => e.id === id);
+      if (!el) return;
+      currentId = id;
+      input.value = `Elevator ${id}`;
+      clearBtn.hidden = false;
+      detail.innerHTML = renderElevator(el);
+      close();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clear() {
+      currentId = null;
+      input.value = '';
+      clearBtn.hidden = true;
+      detail.innerHTML = '<div class="empty">Select an elevator to view access details.</div>';
+      renderList();
+      input.focus();
+    }
+
+    input.addEventListener('focus', () => {
+      // If an elevator is already selected, clear the input so typing filters fresh
+      if (currentId !== null) input.value = '';
+      renderList();
+      open();
+    });
+
+    input.addEventListener('input', () => {
+      clearBtn.hidden = !input.value;
+      activeIdx = -1;
+      renderList();
+      open();
+    });
+
+    input.addEventListener('keydown', (e) => {
+      const items = filtered();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!isOpen()) open();
+        if (!items.length) return;
+        activeIdx = (activeIdx + 1) % items.length;
+        renderList();
+        scrollActiveIntoView();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!items.length) return;
+        activeIdx = activeIdx <= 0 ? items.length - 1 : activeIdx - 1;
+        renderList();
+        scrollActiveIntoView();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIdx >= 0 && items[activeIdx]) {
+          select(items[activeIdx].id);
+        } else if (items.length === 1) {
+          select(items[0].id);
+        }
+      } else if (e.key === 'Escape') {
+        if (isOpen()) { close(); } else { input.blur(); }
+      }
+    });
+
+    list.addEventListener('mousedown', (e) => {
+      // mousedown so it fires before input blur
+      const opt = e.target.closest('.combo-option');
+      if (!opt) return;
+      e.preventDefault();
+      select(Number(opt.dataset.id));
+    });
+
+    toggle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      if (isOpen()) {
+        close();
+        input.blur();
+      } else {
+        input.focus();
+      }
+    });
+
+    clearBtn.addEventListener('click', clear);
+
+    document.addEventListener('mousedown', (e) => {
+      if (!e.target.closest('.combo')) close();
+    });
+
+    // If user had a selection and blurs out with garbage text, restore label
+    input.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (!isOpen() && currentId !== null && !input.value.startsWith('Elevator ')) {
+          input.value = `Elevator ${currentId}`;
+        }
+      }, 0);
     });
   }
 
@@ -620,7 +845,7 @@
     alert('Admin panel — not wired up yet.');
   });
 
-  populateDropdown();
+  initCombobox();
   renderFooter();
 })();
 </script>
