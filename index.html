@@ -713,7 +713,7 @@
           ? `${el.levels.length} level${el.levels.length === 1 ? '' : 's'}`
           : 'no data';
         return `<li class="combo-option${i === activeIdx ? ' active' : ''}" role="option" data-id="${el.id}">
-          <span class="opt-id">Elevator ${el.id}</span>
+          <span class="opt-id">${el.id}</span>
           <span class="opt-hint">· ${hint}</span>
         </li>`;
       }).join('');
