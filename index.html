@@ -470,13 +470,383 @@
     .elev-header h2 { font-size: 24px; }
     .field { grid-template-columns: 1fr; gap: 2px; padding: 10px 0; }
     .field-label { padding-top: 0; }
-    .selector select { font-size: 17px; padding: 14px 40px 14px 16px; }
+    .combo-input { font-size: 17px; padding: 14px 70px 14px 16px; }
+  }
+
+  /* ============================================================
+     ADMIN PANEL — utilitarian desktop tool
+     ============================================================ */
+  [hidden] { display: none !important; }
+
+  .admin-app {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 20px 24px 80px;
+  }
+
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .admin-header h1 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .admin-header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .admin-last-updated {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .admin-last-updated .lu-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .admin-last-updated .lu-value {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .admin-last-updated .lu-value.dim { color: var(--text-faint); font-style: italic; }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover, .btn:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    outline: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #1a1000;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover, .btn-primary:focus-visible {
+    background: var(--accent-hi);
+    border-color: var(--accent-hi);
+    color: #1a1000;
+  }
+  .btn-danger {
+    color: var(--badge-oneshot-fg);
+    border-color: var(--badge-oneshot-bd);
+  }
+  .btn-danger:hover, .btn-danger:focus-visible {
+    background: var(--badge-oneshot-bg);
+    color: var(--badge-oneshot-fg);
+    border-color: var(--badge-oneshot-fg);
+  }
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+  .btn-ghost {
+    background: transparent;
+  }
+
+  /* Login screen */
+  .login-box {
+    max-width: 420px;
+    margin: 80px auto 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 32px;
+  }
+  .login-box h2 {
+    margin: 0 0 6px;
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .login-box p {
+    margin: 0 0 20px;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+  .login-box .input {
+    width: 100%;
+    background: var(--bg-elev);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+  .login-box .input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .login-error {
+    color: var(--badge-oneshot-fg);
+    font-family: var(--mono);
+    font-size: 12px;
+    margin: 0 0 12px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Admin list */
+  .admin-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .admin-toolbar h2 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .elev-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .elev-list-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .elev-list-item:hover, .elev-list-item:focus-visible {
+    border-color: var(--accent);
+    background: var(--card-hi);
+    outline: none;
+  }
+  .elev-list-item .num {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .elev-list-item .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: right;
+  }
+
+  /* Editor */
+  .editor-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .editor-section-header {
+    padding: 12px 16px;
+    background: var(--card-hi);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .editor-section-body {
+    padding: 16px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+
+  .form-field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .form-field input[type="text"],
+  .form-field input[type="number"],
+  .form-field textarea,
+  .form-field select {
+    width: 100%;
+    background: var(--bg-elev);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .form-field input.mono,
+  .form-field select {
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .form-field textarea {
+    resize: vertical;
+    min-height: 90px;
+  }
+  .form-field input:focus,
+  .form-field textarea:focus,
+  .form-field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .seg button {
+    background: var(--bg-elev);
+    color: var(--text-dim);
+    border: none;
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button.active {
+    background: var(--accent);
+    color: #1a1000;
+  }
+  .seg button:hover:not(.active) {
+    color: var(--accent);
+  }
+
+  .level-row {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .level-row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+  .level-row-header .level-label-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .level-row-header .level-label-wrap label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .level-row-header input.level-name {
+    width: 110px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px 0 0;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 720px) {
+    .admin-app { padding: 16px 14px 60px; }
+    .form-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
-<div class="app" id="app">
+<div class="app" id="fieldView">
 
   <header class="header">
     <div class="header-title">
@@ -520,6 +890,81 @@
   <footer class="footer" id="footer">
     Last updated: —
   </footer>
+
+</div>
+
+<!-- ============================================================
+     ADMIN — login + list + editor (all hidden until auth)
+     ============================================================ -->
+<div class="admin-app" id="adminView" hidden>
+
+  <!-- Login -->
+  <section id="adminLogin">
+    <div class="login-box">
+      <h2>Admin Access</h2>
+      <p>Enter the admin password to edit elevator records.</p>
+      <form id="adminLoginForm" autocomplete="off">
+        <input
+          id="adminPassword"
+          class="input"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          autofocus>
+        <p class="login-error" id="adminLoginError" hidden>Incorrect password.</p>
+        <div style="display:flex; gap:8px; justify-content:space-between;">
+          <button type="button" class="btn btn-ghost" id="adminLoginCancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Enter</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- List -->
+  <section id="adminList" hidden>
+    <header class="admin-header">
+      <h1>Admin · Elevator Records</h1>
+      <div class="admin-header-actions">
+        <button type="button" class="btn btn-ghost" id="adminBackToField">← Field View</button>
+        <button type="button" class="btn" id="adminLogout">Log out</button>
+      </div>
+    </header>
+
+    <div class="admin-last-updated" id="adminLastUpdated">
+      <span class="lu-label">Last updated:</span>
+      <span class="lu-value dim">never</span>
+    </div>
+
+    <div class="admin-toolbar">
+      <h2>All Elevators (<span id="elevCount">0</span>)</h2>
+      <div class="admin-header-actions">
+        <button type="button" class="btn" id="adminNewElev">+ New Elevator</button>
+        <button type="button" class="btn btn-primary" id="adminSave">Save &amp; Download</button>
+      </div>
+    </div>
+
+    <div class="elev-list" id="adminElevList"></div>
+  </section>
+
+  <!-- Editor -->
+  <section id="adminEdit" hidden>
+    <header class="admin-header">
+      <h1 id="adminEditTitle">Editing Elevator</h1>
+      <div class="admin-header-actions">
+        <button type="button" class="btn btn-ghost" id="adminEditBack">← Back to list</button>
+        <button type="button" class="btn btn-danger" id="adminEditDelete">Delete elevator</button>
+      </div>
+    </header>
+
+    <div id="adminEditBody"></div>
+
+    <div class="editor-footer">
+      <span style="font-family: var(--mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.08em;">
+        Changes saved in-memory. Use "Save &amp; Download" on the list to export.
+      </span>
+      <button type="button" class="btn btn-primary" id="adminEditDone">Done</button>
+    </div>
+  </section>
 
 </div>
 
@@ -678,7 +1123,7 @@
     const clearBtn = document.getElementById('elevatorClear');
     const detail = document.getElementById('detail');
 
-    const all = DATA.elevators.slice().sort((a, b) => a.id - b.id);
+    const getAll = () => DATA.elevators.slice().sort((a, b) => a.id - b.id);
     let activeIdx = -1;
     let currentId = null;
 
@@ -696,6 +1141,7 @@
     function isOpen() { return !list.hidden; }
 
     function filtered() {
+      const all = getAll();
       const q = input.value.trim().toLowerCase();
       if (!q) return all;
       return all.filter(el => String(el.id).includes(q));
@@ -725,7 +1171,7 @@
     }
 
     function select(id) {
-      const el = all.find(e => e.id === id);
+      const el = DATA.elevators.find(e => e.id === id);
       if (!el) return;
       currentId = id;
       input.value = `Elevator ${id}`;
@@ -840,11 +1286,459 @@
     footer.textContent = `Last updated: ${when}${lastUpdatedBy ? ' by ' + lastUpdatedBy : ''}`;
   }
 
-  // --- Admin button (scaffold only) ---
-  document.getElementById('adminBtn').addEventListener('click', () => {
-    alert('Admin panel — not wired up yet.');
+  // ============================================================
+  // ADMIN PANEL
+  // ============================================================
+
+  const ADMIN_PASSWORD = 'Redstapler!';
+  const SIDE_OPTIONS = ['', 'Airside', 'Groundside', 'Airside / Groundside'];
+  const STAIRWELL_OPTIONS = [
+    { value: 'true',  label: 'Yes' },
+    { value: 'false', label: 'No' },
+    { value: 'null',  label: '—' }
+  ];
+
+  let authed = false;
+  let editingId = null;
+
+  // ---- View router ----
+  function showView(which) {
+    document.getElementById('fieldView').hidden = (which !== 'field');
+    document.getElementById('adminView').hidden = (which !== 'admin');
+    if (which === 'admin') {
+      document.getElementById('adminLogin').hidden = authed;
+      document.getElementById('adminList').hidden  = !authed;
+      document.getElementById('adminEdit').hidden  = true;
+    }
+    window.scrollTo({ top: 0 });
+  }
+
+  function showAdminScreen(name) {
+    document.getElementById('adminLogin').hidden = (name !== 'login');
+    document.getElementById('adminList').hidden  = (name !== 'list');
+    document.getElementById('adminEdit').hidden  = (name !== 'edit');
+    window.scrollTo({ top: 0 });
+  }
+
+  // ---- Login ----
+  const adminBtn        = document.getElementById('adminBtn');
+  const loginForm       = document.getElementById('adminLoginForm');
+  const loginInput      = document.getElementById('adminPassword');
+  const loginError      = document.getElementById('adminLoginError');
+  const loginCancelBtn  = document.getElementById('adminLoginCancel');
+
+  adminBtn.addEventListener('click', () => {
+    showView('admin');
+    if (!authed) {
+      loginInput.value = '';
+      loginError.hidden = true;
+      setTimeout(() => loginInput.focus(), 0);
+    } else {
+      renderAdminList();
+    }
   });
 
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (loginInput.value === ADMIN_PASSWORD) {
+      authed = true;
+      loginInput.value = '';
+      loginError.hidden = true;
+      renderAdminList();
+      showAdminScreen('list');
+    } else {
+      loginError.hidden = false;
+      loginInput.select();
+    }
+  });
+
+  loginCancelBtn.addEventListener('click', () => {
+    loginInput.value = '';
+    loginError.hidden = true;
+    showView('field');
+  });
+
+  document.getElementById('adminLogout').addEventListener('click', () => {
+    authed = false;
+    editingId = null;
+    showView('field');
+  });
+
+  document.getElementById('adminBackToField').addEventListener('click', () => {
+    showView('field');
+    renderFooter();
+  });
+
+  // ---- List screen ----
+  function renderAdminList() {
+    renderAdminLastUpdated();
+    const list = document.getElementById('adminElevList');
+    const count = document.getElementById('elevCount');
+    const sorted = DATA.elevators.slice().sort((a, b) => a.id - b.id);
+    count.textContent = sorted.length;
+    list.innerHTML = sorted.map(el => {
+      const levels = (el.levels || []).length;
+      const hasMR = el.machineRoom && (el.machineRoom.side || el.machineRoom.description);
+      const meta = hasMR ? `${levels} level${levels === 1 ? '' : 's'}` : 'no data';
+      return `<button type="button" class="elev-list-item" data-id="${el.id}">
+        <span class="num">${el.id}</span>
+        <span class="meta">${meta}</span>
+      </button>`;
+    }).join('');
+  }
+
+  function renderAdminLastUpdated() {
+    const box = document.getElementById('adminLastUpdated');
+    const { lastUpdatedBy, lastUpdatedAt } = DATA.meta || {};
+    if (!lastUpdatedAt && !lastUpdatedBy) {
+      box.innerHTML = '<span class="lu-label">Last updated:</span> <span class="lu-value dim">never</span>';
+      return;
+    }
+    let when = '—';
+    if (lastUpdatedAt) {
+      const d = new Date(lastUpdatedAt);
+      if (!isNaN(d)) {
+        when = d.toLocaleString('en-GB', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      }
+    }
+    const who = lastUpdatedBy ? ` by ${escHtml(lastUpdatedBy)}` : '';
+    box.innerHTML = `<span class="lu-label">Last updated:</span> <span class="lu-value">${escHtml(when)}${who}</span>`;
+  }
+
+  function escHtml(s) { return esc(s); }
+
+  document.getElementById('adminElevList').addEventListener('click', (e) => {
+    const btn = e.target.closest('.elev-list-item');
+    if (!btn) return;
+    openEditor(Number(btn.dataset.id));
+  });
+
+  // ---- New elevator ----
+  document.getElementById('adminNewElev').addEventListener('click', () => {
+    const raw = prompt('New elevator number:');
+    if (raw === null) return;
+    const trimmed = String(raw).trim();
+    if (!/^\d+$/.test(trimmed)) {
+      alert('Please enter a whole number.');
+      return;
+    }
+    const id = parseInt(trimmed, 10);
+    if (DATA.elevators.some(e => e.id === id)) {
+      alert(`Elevator ${id} already exists.`);
+      return;
+    }
+    DATA.elevators.push({
+      id,
+      machineRoom: { side: null, parking: null, description: null, stairwell: null },
+      levels: [],
+      comments: ''
+    });
+    openEditor(id);
+  });
+
+  // ---- Editor ----
+  function openEditor(id) {
+    editingId = id;
+    const el = DATA.elevators.find(e => e.id === id);
+    if (!el) return;
+    document.getElementById('adminEditTitle').textContent = `Editing Elevator ${el.id}`;
+    document.getElementById('adminEditBody').innerHTML = editorHTML(el);
+    wireEditor(el);
+    showAdminScreen('edit');
+  }
+
+  function editorHTML(el) {
+    return `
+      <section class="editor-section">
+        <div class="editor-section-header">
+          <span>Elevator ID</span>
+        </div>
+        <div class="editor-section-body">
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="ed-id">Number</label>
+              <input id="ed-id" type="number" min="1" class="mono" value="${esc(el.id)}">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="editor-section">
+        <div class="editor-section-header">
+          <span>Machine Room</span>
+        </div>
+        <div class="editor-section-body">
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Side</label>
+              ${sideSelectHTML('ed-mr-side', el.machineRoom && el.machineRoom.side)}
+            </div>
+            <div class="form-field">
+              <label>Stairwell</label>
+              ${segHTML('ed-mr-stair', STAIRWELL_OPTIONS, stairValue(el.machineRoom && el.machineRoom.stairwell))}
+            </div>
+            <div class="form-field full">
+              <label for="ed-mr-parking">Parking</label>
+              <input id="ed-mr-parking" type="text" value="${esc(el.machineRoom && el.machineRoom.parking || '')}">
+            </div>
+            <div class="form-field full">
+              <label for="ed-mr-desc">Description</label>
+              <textarea id="ed-mr-desc" rows="4">${esc(el.machineRoom && el.machineRoom.description || '')}</textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="editor-section">
+        <div class="editor-section-header">
+          <span>Levels</span>
+          <button type="button" class="btn btn-sm" id="ed-add-level">+ Add level</button>
+        </div>
+        <div class="editor-section-body">
+          <div id="ed-levels">${(el.levels || []).map((lvl, i) => levelRowHTML(lvl, i)).join('')}</div>
+          ${(el.levels || []).length === 0 ? '<p style="color:var(--text-faint); font-family:var(--mono); font-size:12px; margin:4px 0 0;">No levels yet. Click "Add level".</p>' : ''}
+        </div>
+      </section>
+
+      <section class="editor-section">
+        <div class="editor-section-header">
+          <span>Additional Comments</span>
+        </div>
+        <div class="editor-section-body">
+          <div class="form-field">
+            <textarea id="ed-comments" rows="4">${esc(el.comments || '')}</textarea>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  function levelRowHTML(lvl, i) {
+    return `
+      <div class="level-row" data-idx="${i}">
+        <div class="level-row-header">
+          <div class="level-label-wrap">
+            <label>Level</label>
+            <input type="text" class="level-name" data-field="level" value="${esc(lvl.level || '')}" placeholder="e.g. 3 or Roof">
+          </div>
+          <button type="button" class="btn btn-sm btn-danger" data-action="remove">Remove</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Side</label>
+            ${sideSelectHTML(`ed-lvl-${i}-side`, lvl.side, 'data-field="side"')}
+          </div>
+          <div class="form-field">
+            <label>Stairwell</label>
+            ${segHTML(`ed-lvl-${i}-stair`, STAIRWELL_OPTIONS, stairValue(lvl.stairwell), 'data-field="stairwell"')}
+          </div>
+          <div class="form-field full">
+            <label>Parking</label>
+            <input type="text" data-field="parking" value="${esc(lvl.parking || '')}">
+          </div>
+          <div class="form-field full">
+            <label>Description</label>
+            <textarea rows="3" data-field="description">${esc(lvl.description || '')}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function sideSelectHTML(id, value, extra = '') {
+    return `<select id="${id}" ${extra}>
+      ${SIDE_OPTIONS.map(opt => `<option value="${esc(opt)}"${(value || '') === opt ? ' selected' : ''}>${opt ? esc(opt) : '—'}</option>`).join('')}
+    </select>`;
+  }
+
+  function segHTML(id, opts, value, extra = '') {
+    return `<div class="seg" id="${id}" ${extra}>
+      ${opts.map(o => `<button type="button" data-value="${o.value}" class="${o.value === value ? 'active' : ''}">${o.label}</button>`).join('')}
+    </div>`;
+  }
+
+  function stairValue(v) {
+    if (v === true) return 'true';
+    if (v === false) return 'false';
+    return 'null';
+  }
+  function parseStair(v) {
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    return null;
+  }
+  function cleanString(s) {
+    const t = (s || '').trim();
+    return t === '' ? null : t;
+  }
+
+  function wireEditor(el) {
+    const body = document.getElementById('adminEditBody');
+
+    // ID change
+    body.querySelector('#ed-id').addEventListener('input', (e) => {
+      const raw = e.target.value.trim();
+      if (!/^\d+$/.test(raw)) return;
+      const newId = parseInt(raw, 10);
+      if (newId === el.id) return;
+      if (DATA.elevators.some(o => o !== el && o.id === newId)) {
+        e.target.setCustomValidity('Already in use');
+        e.target.reportValidity();
+        return;
+      }
+      e.target.setCustomValidity('');
+      el.id = newId;
+      editingId = newId;
+      document.getElementById('adminEditTitle').textContent = `Editing Elevator ${el.id}`;
+    });
+
+    // Machine Room
+    body.querySelector('#ed-mr-side').addEventListener('change', (e) => {
+      el.machineRoom = el.machineRoom || {};
+      el.machineRoom.side = cleanString(e.target.value);
+    });
+    body.querySelector('#ed-mr-parking').addEventListener('input', (e) => {
+      el.machineRoom = el.machineRoom || {};
+      el.machineRoom.parking = cleanString(e.target.value);
+    });
+    body.querySelector('#ed-mr-desc').addEventListener('input', (e) => {
+      el.machineRoom = el.machineRoom || {};
+      el.machineRoom.description = cleanString(e.target.value);
+    });
+    wireSeg(body.querySelector('#ed-mr-stair'), (v) => {
+      el.machineRoom = el.machineRoom || {};
+      el.machineRoom.stairwell = parseStair(v);
+    });
+
+    // Comments
+    body.querySelector('#ed-comments').addEventListener('input', (e) => {
+      el.comments = e.target.value;
+    });
+
+    // Levels container wiring
+    const levelsContainer = body.querySelector('#ed-levels');
+    wireLevelsContainer(el, levelsContainer);
+
+    body.querySelector('#ed-add-level').addEventListener('click', () => {
+      el.levels = el.levels || [];
+      el.levels.push({ level: '', side: null, parking: null, description: null, stairwell: null });
+      rebuildLevels(el);
+    });
+  }
+
+  function wireLevelsContainer(el, container) {
+    container.addEventListener('input', (e) => {
+      const row = e.target.closest('.level-row');
+      if (!row) return;
+      const idx = Number(row.dataset.idx);
+      const lvl = el.levels[idx];
+      if (!lvl) return;
+      const field = e.target.dataset.field;
+      if (field === 'level') lvl.level = e.target.value;
+      else if (field === 'parking') lvl.parking = cleanString(e.target.value);
+      else if (field === 'description') lvl.description = cleanString(e.target.value);
+    });
+    container.addEventListener('change', (e) => {
+      const row = e.target.closest('.level-row');
+      if (!row) return;
+      const idx = Number(row.dataset.idx);
+      const lvl = el.levels[idx];
+      if (!lvl) return;
+      if (e.target.dataset.field === 'side') lvl.side = cleanString(e.target.value);
+    });
+    container.addEventListener('click', (e) => {
+      const row = e.target.closest('.level-row');
+      if (!row) return;
+      const idx = Number(row.dataset.idx);
+      if (e.target.dataset.action === 'remove') {
+        el.levels.splice(idx, 1);
+        rebuildLevels(el);
+        return;
+      }
+      // seg button
+      const segBtn = e.target.closest('.seg button');
+      if (segBtn) {
+        const seg = segBtn.parentElement;
+        if (seg.dataset.field === 'stairwell') {
+          seg.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          segBtn.classList.add('active');
+          el.levels[idx].stairwell = parseStair(segBtn.dataset.value);
+        }
+      }
+    });
+  }
+
+  function wireSeg(segEl, onPick) {
+    segEl.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      segEl.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      onPick(b.dataset.value);
+    });
+  }
+
+  function rebuildLevels(el) {
+    const body = document.getElementById('adminEditBody');
+    const container = body.querySelector('#ed-levels');
+    container.innerHTML = (el.levels || []).map((lvl, i) => levelRowHTML(lvl, i)).join('');
+  }
+
+  document.getElementById('adminEditBack').addEventListener('click', () => {
+    editingId = null;
+    renderAdminList();
+    showAdminScreen('list');
+  });
+  document.getElementById('adminEditDone').addEventListener('click', () => {
+    editingId = null;
+    renderAdminList();
+    showAdminScreen('list');
+  });
+
+  document.getElementById('adminEditDelete').addEventListener('click', () => {
+    if (editingId === null) return;
+    if (!confirm(`Delete Elevator ${editingId}? This cannot be undone until you reload the page.`)) return;
+    const idx = DATA.elevators.findIndex(e => e.id === editingId);
+    if (idx >= 0) DATA.elevators.splice(idx, 1);
+    editingId = null;
+    renderAdminList();
+    showAdminScreen('list');
+  });
+
+  // ---- Save & Download ----
+  document.getElementById('adminSave').addEventListener('click', () => {
+    const name = prompt('Enter your name for the update log:');
+    if (name === null) return;
+    const trimmed = String(name).trim();
+    if (!trimmed) {
+      alert('Name is required to save.');
+      return;
+    }
+    DATA.meta = DATA.meta || {};
+    DATA.meta.lastUpdatedBy = trimmed;
+    DATA.meta.lastUpdatedAt = new Date().toISOString();
+    downloadDataFile(DATA);
+    renderAdminLastUpdated();
+    renderFooter();
+  });
+
+  function downloadDataFile(data) {
+    const content = 'const ELEVATOR_DATA =\n' + JSON.stringify(data, null, 2) + '\n;\n';
+    const blob = new Blob([content], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'elevator-data.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  // ---- Boot ----
   initCombobox();
   renderFooter();
 })();
