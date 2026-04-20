@@ -1305,6 +1305,7 @@
   ];
 
   let editingId = null;
+  let loadedSha = null;
 
   function getToken() { return sessionStorage.getItem(TOKEN_KEY) || ''; }
   function setToken(t) { sessionStorage.setItem(TOKEN_KEY, t); }
@@ -1373,14 +1374,13 @@
     return json.sha;
   }
 
-  async function commitDataFile(content, message, author) {
-    const sha = await getFileSha();
+  async function commitDataFile(content, message, author, expectedSha) {
     const body = {
       message,
       content: toBase64Utf8(content),
       branch: GITHUB_BRANCH
     };
-    if (sha) body.sha = sha;
+    if (expectedSha) body.sha = expectedSha;
     if (author && author.name) {
       body.committer = { name: author.name, email: author.email || `${author.name.replace(/\s+/g, '.').toLowerCase()}@yvr.local` };
       body.author    = body.committer;
@@ -1393,6 +1393,22 @@
         body: JSON.stringify(body)
       }
     );
+    if (res.status === 409) {
+      const err = new Error('Conflict');
+      err.conflict = true;
+      throw err;
+    }
+    if (res.status === 422) {
+      // 422 on an update almost always means the sha is stale or missing;
+      // treat it as a conflict for the user-facing case.
+      const txt = await res.text();
+      if (/sha/i.test(txt)) {
+        const err = new Error('Conflict');
+        err.conflict = true;
+        throw err;
+      }
+      throw new Error(`Commit failed (422): ${txt.slice(0, 300)}`);
+    }
     if (!res.ok) {
       const txt = await res.text();
       throw new Error(`Commit failed (${res.status}): ${txt.slice(0, 300)}`);
@@ -1458,6 +1474,14 @@
         return;
       }
       setToken(token);
+      // Snapshot the current file sha so we can detect concurrent edits on save.
+      try {
+        loadedSha = await getFileSha();
+      } catch (e) {
+        clearToken();
+        showLoginError('Could not load current data: ' + (e && e.message || e));
+        return;
+      }
       loginInput.value = '';
       renderAdminList();
       showAdminScreen('list');
@@ -1482,6 +1506,7 @@
   document.getElementById('adminLogout').addEventListener('click', () => {
     clearToken();
     editingId = null;
+    loadedSha = null;
     showView('field');
   });
 
@@ -1858,7 +1883,10 @@
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
     try {
-      await commitDataFile(content, message, { name: trimmed });
+      const response = await commitDataFile(content, message, { name: trimmed }, loadedSha);
+      if (response && response.content && response.content.sha) {
+        loadedSha = response.content.sha;
+      }
       saveBtn.textContent = 'Saved ✓';
       renderAdminLastUpdated();
       renderFooter();
@@ -1866,7 +1894,9 @@
     } catch (err) {
       saveBtn.textContent = prevLabel;
       saveBtn.disabled = false;
-      if (/401/.test(err.message)) {
+      if (err.conflict) {
+        alert('Data was updated by someone else since you opened this. Please reload and re-apply your changes.');
+      } else if (/401/.test(err.message)) {
         clearToken();
         alert('Token was rejected by GitHub. Please log in again.');
         showView('field');
