@@ -247,6 +247,14 @@
     text-transform: uppercase;
   }
 
+  /* Suggest a Change bar */
+  .suggest-bar {
+    display: flex;
+    justify-content: center;
+    padding: 24px 4px 8px;
+    margin-top: 8px;
+  }
+
   /* Elevator header */
   .elev-header {
     display: flex;
@@ -537,6 +545,46 @@
     font-weight: 500;
   }
   .admin-last-updated .lu-value.dim { color: var(--text-faint); font-style: italic; }
+
+  .admin-settings {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .admin-settings .settings-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .admin-settings .settings-input {
+    flex: 1 1 260px;
+    min-width: 260px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .admin-settings .settings-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .admin-settings .settings-hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
   .btn {
     font-family: var(--mono);
@@ -936,6 +984,12 @@
       <span class="lu-value dim">never</span>
     </div>
 
+    <div class="admin-settings">
+      <label for="adminSuggestionEmail" class="settings-label">Suggest-a-Change email</label>
+      <input type="email" id="adminSuggestionEmail" class="settings-input mono" placeholder="alexander_roth@yvr.ca" autocomplete="off">
+      <span class="settings-hint">Saved to GitHub with next Save.</span>
+    </div>
+
     <div class="admin-toolbar">
       <h2>All Elevators (<span id="elevCount">0</span>)</h2>
       <div class="admin-header-actions">
@@ -1100,6 +1154,14 @@
     `;
   }
 
+  function renderSuggestBar(el) {
+    return `
+      <div class="suggest-bar">
+        <button type="button" class="btn" id="suggestChangeBtn" data-id="${esc(el.id)}">Suggest a Change</button>
+      </div>
+    `;
+  }
+
   function renderElevator(el) {
     const levelsHtml = (el.levels || []).map(renderLevel).join('');
     return `
@@ -1110,7 +1172,68 @@
       ${renderMachineRoom(el.machineRoom || {})}
       ${levelsHtml}
       ${renderComments(el.comments)}
+      ${renderSuggestBar(el)}
     `;
+  }
+
+  // --- Suggest a Change (mailto) ---
+  function formatSideLabel(s) { return s ? s : '—'; }
+  function formatStairwell(v) {
+    if (v === true) return 'Yes';
+    if (v === false) return 'No';
+    return '—';
+  }
+  function plainLine(label, value) {
+    const v = (value === null || value === undefined || value === '') ? '—' : value;
+    return `${label}: ${v}`;
+  }
+
+  function buildElevatorPlaintext(el) {
+    const lines = [];
+    lines.push(`ELEVATOR ${el.id}`);
+    lines.push('');
+    lines.push('MACHINE ROOM');
+    const mr = el.machineRoom || {};
+    lines.push(plainLine('  Side', formatSideLabel(mr.side)));
+    lines.push(plainLine('  Parking', mr.parking));
+    lines.push(plainLine('  Access', mr.description));
+    lines.push(plainLine('  Stairwell', formatStairwell(mr.stairwell)));
+    lines.push('');
+    const levels = el.levels || [];
+    if (levels.length === 0) {
+      lines.push('LEVELS');
+      lines.push('  (none recorded)');
+      lines.push('');
+    } else {
+      levels.forEach(lvl => {
+        lines.push(`LEVEL ${lvl.level}`);
+        lines.push(plainLine('  Side', formatSideLabel(lvl.side)));
+        lines.push(plainLine('  Parking', lvl.parking));
+        lines.push(plainLine('  Access', lvl.description));
+        lines.push(plainLine('  Stairwell', formatStairwell(lvl.stairwell)));
+        lines.push('');
+      });
+    }
+    lines.push('COMMENTS');
+    lines.push(`  ${el.comments ? el.comments : '—'}`);
+    lines.push('');
+    lines.push('SUGGESTED CHANGES:');
+    lines.push('');
+    lines.push('');
+    return lines.join('\n');
+  }
+
+  function getSuggestionEmail() {
+    const email = DATA.meta && DATA.meta.suggestionEmail;
+    return (email && String(email).trim()) || 'alexander_roth@yvr.ca';
+  }
+
+  function openSuggestMailto(el) {
+    const email = getSuggestionEmail();
+    const subject = `YVR Elevator Audit — Suggested Change: Elevator ${el.id}`;
+    const body = buildElevatorPlaintext(el);
+    const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = href;
   }
 
   // --- Searchable combobox ---
@@ -1175,6 +1298,10 @@
       input.value = `Elevator ${id}`;
       clearBtn.hidden = false;
       detail.innerHTML = renderElevator(el);
+      const suggestBtn = detail.querySelector('#suggestChangeBtn');
+      if (suggestBtn) {
+        suggestBtn.addEventListener('click', () => openSuggestMailto(el));
+      }
       close();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1515,6 +1642,7 @@
   // ---- List screen ----
   function renderAdminList() {
     renderAdminLastUpdated();
+    renderAdminSettings();
     const list = document.getElementById('adminElevList');
     const count = document.getElementById('elevCount');
     const sorted = DATA.elevators.slice().sort((a, b) => a.id - b.id);
@@ -1528,6 +1656,14 @@
         <span class="meta">${meta}</span>
       </button>`;
     }).join('');
+  }
+
+  function renderAdminSettings() {
+    const input = document.getElementById('adminSuggestionEmail');
+    if (!input) return;
+    if (!DATA.meta) DATA.meta = {};
+    if (!DATA.meta.suggestionEmail) DATA.meta.suggestionEmail = 'alexander_roth@yvr.ca';
+    input.value = DATA.meta.suggestionEmail;
   }
 
   function renderAdminLastUpdated() {
@@ -1557,6 +1693,11 @@
     const btn = e.target.closest('.elev-list-item');
     if (!btn) return;
     openEditor(Number(btn.dataset.id));
+  });
+
+  document.getElementById('adminSuggestionEmail').addEventListener('input', (e) => {
+    if (!DATA.meta) DATA.meta = {};
+    DATA.meta.suggestionEmail = e.target.value.trim();
   });
 
   // ---- New elevator ----

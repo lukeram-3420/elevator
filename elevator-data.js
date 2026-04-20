@@ -2,7 +2,8 @@ const ELEVATOR_DATA =
   {
   "meta": {
     "lastUpdatedBy": "Admin",
-    "lastUpdatedAt": "2026-04-20T19:00:00Z"
+    "lastUpdatedAt": "2026-04-20T19:00:00Z",
+    "suggestionEmail": "alexander_roth@yvr.ca"
   },
   "elevators": [
     {
