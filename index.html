@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f12">
-<title>YVR Elevator Audit</title>
+<title>L.A.D.D.E.R.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -73,8 +73,10 @@
 
   .header-title {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
   }
 
   .header-title h1 {
@@ -898,8 +900,8 @@
 
   <header class="header">
     <div class="header-title">
-      <h1>YVR Elevator Audit</h1>
-      <span class="sub">ARFF Field Reference</span>
+      <h1>L.A.D.D.E.R.</h1>
+      <span class="sub">Location Access Directory for Determining Elevator Routes</span>
     </div>
     <button class="admin-btn" id="adminBtn" type="button">Admin</button>
   </header>
@@ -1230,7 +1232,7 @@
 
   function openSuggestMailto(el) {
     const email = getSuggestionEmail();
-    const subject = `YVR Elevator Audit — Suggested Change: Elevator ${el.id}`;
+    const subject = `L.A.D.D.E.R. — Suggested Change: Elevator ${el.id}`;
     const body = buildElevatorPlaintext(el);
     const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = href;
