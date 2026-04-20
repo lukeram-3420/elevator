@@ -902,19 +902,20 @@
   <section id="adminLogin">
     <div class="login-box">
       <h2>Admin Access</h2>
-      <p>Enter the admin password to edit elevator records.</p>
+      <p>Paste your GitHub Personal Access Token. It must have <strong>Contents: Read &amp; Write</strong> on this repo. The token lives only in this tab's session — refresh or close and you'll re-enter it.</p>
       <form id="adminLoginForm" autocomplete="off">
         <input
           id="adminPassword"
           class="input"
           type="password"
-          placeholder="Password"
-          autocomplete="current-password"
+          placeholder="GitHub Personal Access Token (ghp_… or github_pat_…)"
+          autocomplete="off"
+          spellcheck="false"
           autofocus>
-        <p class="login-error" id="adminLoginError" hidden>Incorrect password.</p>
-        <div style="display:flex; gap:8px; justify-content:space-between;">
+        <p class="login-error" id="adminLoginError" hidden></p>
+        <div style="display:flex; gap:8px; justify-content:space-between; align-items:center;">
           <button type="button" class="btn btn-ghost" id="adminLoginCancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">Enter</button>
+          <button type="submit" class="btn btn-primary" id="adminLoginSubmit">Verify &amp; enter</button>
         </div>
       </form>
     </div>
@@ -939,7 +940,7 @@
       <h2>All Elevators (<span id="elevCount">0</span>)</h2>
       <div class="admin-header-actions">
         <button type="button" class="btn" id="adminNewElev">+ New Elevator</button>
-        <button type="button" class="btn btn-primary" id="adminSave">Save &amp; Download</button>
+        <button type="button" class="btn btn-primary" id="adminSave">Save to GitHub</button>
       </div>
     </div>
 
@@ -1290,7 +1291,12 @@
   // ADMIN PANEL
   // ============================================================
 
-  const ADMIN_PASSWORD = 'Redstapler!';
+  const GITHUB_OWNER  = 'lukeram-3420';
+  const GITHUB_REPO   = 'elevator';
+  const GITHUB_BRANCH = 'main';
+  const GITHUB_FILE   = 'elevator-data.js';
+  const TOKEN_KEY     = 'yvr-elev-admin-token';
+
   const SIDE_OPTIONS = ['', 'Airside', 'Groundside', 'Airside / Groundside'];
   const STAIRWELL_OPTIONS = [
     { value: 'true',  label: 'Yes' },
@@ -1298,14 +1304,108 @@
     { value: 'null',  label: '—' }
   ];
 
-  let authed = false;
   let editingId = null;
+
+  function getToken() { return sessionStorage.getItem(TOKEN_KEY) || ''; }
+  function setToken(t) { sessionStorage.setItem(TOKEN_KEY, t); }
+  function clearToken() { sessionStorage.removeItem(TOKEN_KEY); }
+  function isAuthed() { return !!getToken(); }
+
+  async function githubFetch(path, init = {}) {
+    const headers = Object.assign({
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Authorization': 'Bearer ' + getToken()
+    }, init.headers || {});
+    return fetch('https://api.github.com' + path, Object.assign({}, init, { headers }));
+  }
+
+  async function validateToken(token) {
+    // Temporarily store so githubFetch uses it
+    const prev = getToken();
+    sessionStorage.setItem(TOKEN_KEY, token);
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`,
+        {
+          headers: {
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+            'Authorization': 'Bearer ' + token
+          }
+        }
+      );
+      if (res.status === 401) return { ok: false, reason: 'Token is invalid or expired.' };
+      if (res.status === 403) return { ok: false, reason: 'Token lacks permission for this repo.' };
+      if (res.status === 404) return { ok: false, reason: 'Token cannot see this repo — check access and scopes.' };
+      if (!res.ok) return { ok: false, reason: `GitHub returned ${res.status}.` };
+      const repo = await res.json();
+      if (repo.permissions && repo.permissions.push === false) {
+        return { ok: false, reason: 'Token is read-only. Need Contents: Read & Write.' };
+      }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, reason: 'Network error: ' + (e && e.message || e) };
+    } finally {
+      // Only leave it set on success; caller re-sets if ok
+      if (prev) sessionStorage.setItem(TOKEN_KEY, prev);
+      else sessionStorage.removeItem(TOKEN_KEY);
+    }
+  }
+
+  function toBase64Utf8(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  async function getFileSha() {
+    const res = await githubFetch(
+      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${encodeURIComponent(GITHUB_FILE)}?ref=${encodeURIComponent(GITHUB_BRANCH)}`
+    );
+    if (res.status === 404) return null; // file doesn't exist yet
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Fetch current file failed (${res.status}): ${body.slice(0, 200)}`);
+    }
+    const json = await res.json();
+    return json.sha;
+  }
+
+  async function commitDataFile(content, message, author) {
+    const sha = await getFileSha();
+    const body = {
+      message,
+      content: toBase64Utf8(content),
+      branch: GITHUB_BRANCH
+    };
+    if (sha) body.sha = sha;
+    if (author && author.name) {
+      body.committer = { name: author.name, email: author.email || `${author.name.replace(/\s+/g, '.').toLowerCase()}@yvr.local` };
+      body.author    = body.committer;
+    }
+    const res = await githubFetch(
+      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${encodeURIComponent(GITHUB_FILE)}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }
+    );
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Commit failed (${res.status}): ${txt.slice(0, 300)}`);
+    }
+    return res.json();
+  }
 
   // ---- View router ----
   function showView(which) {
     document.getElementById('fieldView').hidden = (which !== 'field');
     document.getElementById('adminView').hidden = (which !== 'admin');
     if (which === 'admin') {
+      const authed = isAuthed();
       document.getElementById('adminLogin').hidden = authed;
       document.getElementById('adminList').hidden  = !authed;
       document.getElementById('adminEdit').hidden  = true;
@@ -1329,7 +1429,7 @@
 
   adminBtn.addEventListener('click', () => {
     showView('admin');
-    if (!authed) {
+    if (!isAuthed()) {
       loginInput.value = '';
       loginError.hidden = true;
       setTimeout(() => loginInput.focus(), 0);
@@ -1338,19 +1438,40 @@
     }
   });
 
-  loginForm.addEventListener('submit', (e) => {
+  const loginSubmitBtn = document.getElementById('adminLoginSubmit');
+
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (loginInput.value === ADMIN_PASSWORD) {
-      authed = true;
+    const token = loginInput.value.trim();
+    if (!token) {
+      showLoginError('Please paste a token.');
+      return;
+    }
+    loginSubmitBtn.disabled = true;
+    const prev = loginSubmitBtn.textContent;
+    loginSubmitBtn.textContent = 'Verifying…';
+    loginError.hidden = true;
+    try {
+      const result = await validateToken(token);
+      if (!result.ok) {
+        showLoginError(result.reason);
+        return;
+      }
+      setToken(token);
       loginInput.value = '';
-      loginError.hidden = true;
       renderAdminList();
       showAdminScreen('list');
-    } else {
-      loginError.hidden = false;
-      loginInput.select();
+    } finally {
+      loginSubmitBtn.disabled = false;
+      loginSubmitBtn.textContent = prev;
     }
   });
+
+  function showLoginError(msg) {
+    loginError.textContent = msg;
+    loginError.hidden = false;
+    loginInput.select();
+  }
 
   loginCancelBtn.addEventListener('click', () => {
     loginInput.value = '';
@@ -1359,7 +1480,7 @@
   });
 
   document.getElementById('adminLogout').addEventListener('click', () => {
-    authed = false;
+    clearToken();
     editingId = null;
     showView('field');
   });
@@ -1708,8 +1829,16 @@
     showAdminScreen('list');
   });
 
-  // ---- Save & Download ----
-  document.getElementById('adminSave').addEventListener('click', () => {
+  // ---- Save to GitHub ----
+  const saveBtn = document.getElementById('adminSave');
+
+  saveBtn.addEventListener('click', async () => {
+    if (!isAuthed()) {
+      alert('Session expired. Please log in again.');
+      clearToken();
+      showView('field');
+      return;
+    }
     const name = prompt('Enter your name for the update log:');
     if (name === null) return;
     const trimmed = String(name).trim();
@@ -1717,25 +1846,38 @@
       alert('Name is required to save.');
       return;
     }
+
     DATA.meta = DATA.meta || {};
     DATA.meta.lastUpdatedBy = trimmed;
     DATA.meta.lastUpdatedAt = new Date().toISOString();
-    downloadDataFile(DATA);
-    renderAdminLastUpdated();
-    renderFooter();
+
+    const content = buildDataFileContent(DATA);
+    const message = `Update elevator data — ${trimmed}`;
+
+    const prevLabel = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    try {
+      await commitDataFile(content, message, { name: trimmed });
+      saveBtn.textContent = 'Saved ✓';
+      renderAdminLastUpdated();
+      renderFooter();
+      setTimeout(() => { saveBtn.textContent = prevLabel; saveBtn.disabled = false; }, 1600);
+    } catch (err) {
+      saveBtn.textContent = prevLabel;
+      saveBtn.disabled = false;
+      if (/401/.test(err.message)) {
+        clearToken();
+        alert('Token was rejected by GitHub. Please log in again.');
+        showView('field');
+      } else {
+        alert('Save failed: ' + err.message);
+      }
+    }
   });
 
-  function downloadDataFile(data) {
-    const content = 'const ELEVATOR_DATA =\n' + JSON.stringify(data, null, 2) + '\n;\n';
-    const blob = new Blob([content], { type: 'text/javascript' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'elevator-data.js';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+  function buildDataFileContent(data) {
+    return 'const ELEVATOR_DATA =\n' + JSON.stringify(data, null, 2) + '\n;\n';
   }
 
   // ---- Boot ----
