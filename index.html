@@ -422,110 +422,14 @@
 
 </div>
 
-<script id="elevator-data" type="application/json">
-{
-  "meta": {
-    "lastUpdatedBy": "",
-    "lastUpdatedAt": ""
-  },
-  "elevators": [
-    {
-      "id": 9,
-      "machineRoom": {
-        "side": "Groundside",
-        "parking": "Curb by AC Domestic check-in",
-        "description": "Proceed to Domestic Info Counter. Elevator #9 is behind info counter. Take stairwell to level 4. Left hand search. Exit door B4000A. LH Search take door B4000B. Go up another set of stairs to level 7. Note: MR on LV 6 is for elevator #8! Go up to level 7, thru door B7000 (M11). RH search and access MR door B7001 (TMK).",
-        "stairwell": true
-      },
-      "levels": [
-        {
-          "level": "5",
-          "side": "Groundside",
-          "parking": "Curb by AC Domestic check-in",
-          "description": "Proceed to Domestic Info Counter. Take stairwell behind info counter to level 4. Left hand search. Go thru door B4000B. Go up another set of stairs to level 5. RH search to elevator #9.",
-          "stairwell": true
-        },
-        {
-          "level": "4",
-          "side": "Groundside",
-          "parking": "Curb by AC Domestic check-in",
-          "description": "Proceed to Domestic Info Counter. Take stairwell behind info counter to level 4.",
-          "stairwell": true
-        },
-        {
-          "level": "3",
-          "side": "Groundside",
-          "parking": "Curb by AC Domestic check-in",
-          "description": "Proceed to Domestic Info Counter. Elevator #9 is behind info counter.",
-          "stairwell": true
-        },
-        {
-          "level": "2",
-          "side": "Groundside",
-          "parking": "Curb by AC Domestic check-in",
-          "description": "Proceed to Domestic Info Counter. Take stairwell behind info counter to level 2.",
-          "stairwell": true
-        },
-        {
-          "level": "1",
-          "side": "Groundside",
-          "parking": "Curb by AC Domestic check-in",
-          "description": "Proceed to Domestic Info Counter. Take stairwell behind info counter to level 1.",
-          "stairwell": true
-        }
-      ],
-      "comments": "Alt Access to Elevator 9 can be done from airside via the Domestic Mantrap. Thru CATSA Screening. LH search down corridor to Elevator #9 on level 2. Continue LH search to gain access to stairwell to level 1, 3, 4, 5. MR is located in old control tower on level 7. No elevator service on level 6 and 7. MR on level 6 Room B6000 EMR 08 — this is for Elevator #8!"
-    },
-    {
-      "id": 33,
-      "machineRoom": {
-        "side": "Airside",
-        "parking": "Gate 50 — Level 1",
-        "description": "Proceed left down ramp, enter through first or 2nd set of roll up doors on the right into ITB bag hall. Continue straight until reaching pillar L1/C6 in the middle. EMR B1511 will be beside the pillar. TMK#14 key. Continue past EMR on right side and stairwell will be on the left. Call OPS for one shot.",
-        "stairwell": true
-      },
-      "levels": [
-        {
-          "level": "5",
-          "side": "Groundside",
-          "parking": "Graham Clarke Atrium",
-          "description": "The elevator will be on your right when you enter through doors past the totem pole. Stairwell is to the right of the elevator. Level leads to Link offices.",
-          "stairwell": true
-        },
-        {
-          "level": "4",
-          "side": "Groundside",
-          "parking": "Graham Clarke Atrium",
-          "description": "The elevator will be on your right when you enter through doors past the totem pole. Stairwell is to the right of the elevator. Proceed up stairwell to level 4 (takes you to Skytrain).",
-          "stairwell": true
-        },
-        {
-          "level": "3",
-          "side": "Groundside",
-          "parking": "Graham Clarke Atrium",
-          "description": "The elevator will be on your right when you enter through doors past the totem pole. Stairwell is to the right of the elevator.",
-          "stairwell": true
-        },
-        {
-          "level": "1",
-          "side": "Groundside",
-          "parking": "Graham Clarke Atrium",
-          "description": "The elevator will be on your right when you enter through doors past the totem pole. Stairwell is to the right of the elevator. Need to call OPS for one shot to access level 1 EMR room in bag hall. Proceed directly across door into bag hall, turn right and RH search until you find EMR B1511, directly beside pillar L1/C6.",
-          "stairwell": true
-        }
-      ],
-      "comments": "Easiest access for Machine room team responding (RED 9) is Airside at gate 50. Preferred medical team access for occupants would be level 3 at Graham Clarke Atrium as levels 3, 4 and 5 do not require one shot."
-    }
-  ]
-}
-</script>
+<script src="elevator-data.js"></script>
 
 <script>
 (function () {
   'use strict';
 
   // --- Data load ---
-  const DATA = JSON.parse(document.getElementById('elevator-data').textContent);
+  const DATA = ELEVATOR_DATA;
 
   // --- Warning badges ---
   const BADGE_RULES = [
