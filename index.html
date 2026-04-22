@@ -1343,6 +1343,7 @@
         suggestBtn.addEventListener('click', () => openSuggestMailto(el));
       }
       close();
+      input.blur();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
