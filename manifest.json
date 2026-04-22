@@ -1,0 +1,11 @@
+{
+  "name": "L.A.D.D.E.R.",
+  "short_name": "L.A.D.D.E.R.",
+  "description": "Location Access Directory for Determining Elevator Routes",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0f12",
+  "theme_color": "#f5a623"
+}

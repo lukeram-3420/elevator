@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0d0f12">
+<meta name="theme-color" content="#f5a623">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="L.A.D.D.E.R.">
+<link rel="manifest" href="manifest.json">
 <title>L.A.D.D.E.R.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -115,6 +119,28 @@
     color: var(--accent);
     border-color: var(--accent);
     outline: none;
+  }
+  .admin-btn[disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  #refreshBtn {
+    font-size: 14px;
+    line-height: 1;
+    padding: 6px 10px;
+  }
+  #refreshBtn.spinning {
+    animation: ladder-spin 0.9s linear infinite;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  @keyframes ladder-spin {
+    to { transform: rotate(360deg); }
   }
 
   /* Selector */
@@ -471,6 +497,15 @@
     font-size: 11px;
     color: var(--text-faint);
     letter-spacing: 0.08em;
+  }
+  .footer .footer-row {
+    display: block;
+    line-height: 1.7;
+  }
+  .footer .offline-tag {
+    color: var(--badge-oneshot-fg, #f28b82);
+    margin-left: 6px;
+    font-weight: 600;
   }
 
   /* Mobile tuning */
@@ -903,7 +938,10 @@
       <h1>L.A.D.D.E.R.</h1>
       <span class="sub">Location Access Directory for Determining Elevator Routes</span>
     </div>
-    <button class="admin-btn" id="adminBtn" type="button">Admin</button>
+    <div class="header-actions">
+      <button class="admin-btn" id="refreshBtn" type="button" aria-label="Refresh data" title="Refresh data">↻</button>
+      <button class="admin-btn" id="adminBtn" type="button">Admin</button>
+    </div>
   </header>
 
   <div class="selector">
@@ -1393,24 +1431,36 @@
   }
 
   // --- Footer ---
+  function formatTs(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    return d.toLocaleString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  const LAST_REFRESH_KEY = 'ladder-last-refreshed';
+  function getLastRefreshed() {
+    try { return localStorage.getItem(LAST_REFRESH_KEY) || ''; }
+    catch (e) { return ''; }
+  }
+  function setLastRefreshed(iso) {
+    try { localStorage.setItem(LAST_REFRESH_KEY, iso); } catch (e) {}
+  }
+
   function renderFooter() {
     const { lastUpdatedBy, lastUpdatedAt } = DATA.meta || {};
     const footer = document.getElementById('footer');
-    if (!lastUpdatedAt && !lastUpdatedBy) {
-      footer.textContent = 'Last updated: —';
-      return;
-    }
-    let when = '—';
-    if (lastUpdatedAt) {
-      const d = new Date(lastUpdatedAt);
-      if (!isNaN(d)) {
-        when = d.toLocaleString('en-GB', {
-          day: '2-digit', month: 'short', year: 'numeric',
-          hour: '2-digit', minute: '2-digit'
-        });
-      }
-    }
-    footer.textContent = `Last updated: ${when}${lastUpdatedBy ? ' by ' + lastUpdatedBy : ''}`;
+    const version = formatTs(lastUpdatedAt);
+    const by = lastUpdatedBy ? ' by ' + esc(lastUpdatedBy) : '';
+    const refreshed = formatTs(getLastRefreshed());
+    const offline = (typeof navigator !== 'undefined' && navigator.onLine === false)
+      ? '<span class="offline-tag">OFFLINE</span>' : '';
+    footer.innerHTML =
+      `<span class="footer-row">Data version: ${esc(version)}${by}</span>` +
+      `<span class="footer-row">Last refreshed: ${esc(refreshed)}${offline}</span>`;
   }
 
   // ============================================================
@@ -2048,6 +2098,51 @@
 
   function buildDataFileContent(data) {
     return 'const ELEVATOR_DATA =\n' + JSON.stringify(data, null, 2) + '\n;\n';
+  }
+
+  // ---- Offline + refresh ----
+  const refreshBtn = document.getElementById('refreshBtn');
+
+  function setRefreshBusy(busy) {
+    if (!refreshBtn) return;
+    refreshBtn.disabled = !!busy;
+    refreshBtn.classList.toggle('spinning', !!busy);
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js', { scope: './' }).catch(() => {});
+    });
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      const msg = event.data || {};
+      if (msg.type === 'data-refreshed' && msg.ts) {
+        setLastRefreshed(msg.ts);
+        renderFooter();
+      } else if (msg.type === 'cache-cleared') {
+        location.reload();
+      }
+    });
+  }
+
+  window.addEventListener('online',  renderFooter);
+  window.addEventListener('offline', renderFooter);
+
+  if (!getLastRefreshed()) {
+    setLastRefreshed(new Date().toISOString());
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      setRefreshBusy(true);
+      const sw = navigator.serviceWorker;
+      if (sw && sw.controller) {
+        sw.controller.postMessage({ type: 'force-refresh' });
+        // Safety timeout — if SW doesn't reply, reload anyway
+        setTimeout(() => location.reload(), 2500);
+      } else {
+        location.reload();
+      }
+    });
   }
 
   // ---- Boot ----
