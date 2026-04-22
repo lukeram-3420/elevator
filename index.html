@@ -507,11 +507,6 @@
     margin-left: 6px;
     font-weight: 600;
   }
-  .footer .footer-credit {
-    margin-top: 8px;
-    color: var(--accent);
-    letter-spacing: 0.14em;
-  }
 
   /* Mobile tuning */
   @media (max-width: 520px) {
@@ -1466,8 +1461,7 @@
       ? '<span class="offline-tag">OFFLINE</span>' : '';
     footer.innerHTML =
       `<span class="footer-row">Data version: ${esc(version)}${by}</span>` +
-      `<span class="footer-row">Last refreshed: ${esc(refreshed)}${offline}</span>` +
-      `<span class="footer-row footer-credit">Built by Manny</span>`;
+      `<span class="footer-row">Last refreshed: ${esc(refreshed)}${offline}</span>`;
   }
 
   // ============================================================
